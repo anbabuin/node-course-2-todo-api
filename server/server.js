@@ -1,5 +1,6 @@
 let express = require('express');
 let bodyParser = require('body-parser');
+const {ObjectID} = require('mongodb');
 
 let {mongoose} = require('./db/mongoose');
 let {Todo} = require('./models/todo');
@@ -51,5 +52,29 @@ app.listen(port, () => {
 // }, (e) => {
 //     console.log('There was an error: ', e);
 // });
+
+// challenge
+// GET /todos/someid
+// vaòid id: 5b9b7748326d36382b966320
+
+app.get('/todos/:id', (req, res) => {
+    let id = req.params.id;
+    // validate id - isValid if not 404 use send()
+    if(!ObjectID.isValid(id)){
+        return res.status(404).send();
+    }
+
+    // findbyId? [todo? send(todo) : ERROR 404 send({})]: ERROR 400 send({}) 
+    Todo.findById(id).then((todo) => {
+        if(!todo){
+            return res.status(404).send();
+        }
+        res.send({todo});
+    }).catch((e) => {
+        res.status(400).send();
+    });
+});
+
+    
 
 module.exports = {app};
