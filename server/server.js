@@ -6,7 +6,7 @@ let {mongoose} = require('./db/mongoose');
 let {Todo} = require('./models/todo');
 let {User} = require('./models/user');
 
-let port = 3000;
+const port = process.env.PORT || 3000;
 
 let app = express();
 
@@ -34,8 +34,31 @@ app.get('/todos', (req, res) => {
     });
 });
 
+app.delete('/todos/:id', (req, res) => {
+    // get the id
+    let id = req.params.id;
+    // validate the id -> not valid? return 404
+    if(!ObjectID.isValid(id)){
+        return res.status(404).send();
+    }
+    // remove todo by iod 
+    // success -> if no doc -> 404, if doc -> send doc baxk with 200
+    // error -> 400 with empty body
+    Todo.findByIdAndRemove(id).then((todo) => {
+        if(!todo){
+            return res.status(404).send();
+        }
+        res.status(200).send(todo);
+    }).catch((err) => {
+        res.status(400).send();
+    });
+    
+
+});
+
+
 app.listen(port, () => {
-    console.log('Started on port ', port);
+    console.log(`Started on port ${port}`);
 });
 
 
