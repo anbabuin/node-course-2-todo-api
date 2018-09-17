@@ -1,3 +1,4 @@
+// const _ = require('lodash');
 const expect = require('expect');
 const request = require('supertest');
 const  {ObjectID} = require('mongodb');
@@ -10,7 +11,9 @@ const todos = [{
     text: 'First test todo'
 },{
     _id: new ObjectID(),
-    text: 'Second test todo'
+    text: 'Second test todo',
+    completed: true,
+    completedAt: 333
 }];
 
 beforeEach((done) => {
@@ -145,6 +148,83 @@ describe('DELETE /todos/:id', () => {
         .expect(404)
         .end(done);
     });
+});
 
+
+describe('PATCH /todos/:id', () => {
+    it('Should update the todo', (done) => {
+        // grab id first item
+        // update text , set completed to true
+        // check 200
+        // custom assertion text is changed, comleted true, completedAt is a number
+        let firstItem = todos[0];
+        let id = firstItem._id.toHexString();
+
+        let body = {
+            text: "this is the new text",
+            completed: true,
+        };
+
+        request(app)
+        .patch(`/todos/${id}`)
+        .send(body)
+        .expect(200)
+        .expect((res) => {
+            expect(res.body.todo.text).toBe("this is the new text");
+            expect(res.body.todo.completed).toBe(true);
+            expect(res.body.todo.completedAt).toBeA('number');
+            done();
+        })
+        .end((err, res) => {
+            if(err) {
+                return done(err);
+            }
+        });
+
+    });
+
+    
+    it('Should clear completedAt when todo is not completed', (done) => {
+        // grab id of second todo
+        let id = todos[1]._id.toHexString();
+        let body = {
+            text: "this is the new text of second todo",
+            completed: false,
+        };
+        // update text , set completed to false
+        // 200
+        // text is changed, completed false, comlpetedAt null .toNotExist
+        request(app)
+        .patch(`/todos/${id}`)
+        .send(body)
+        .expect(200)
+        .expect((res) => {
+            expect(res.body.todo.text).toBe(body.text);
+            expect(res.body.todo.completed).toBe(false);
+            expect(res.body.todo.completedAt).toNotExist();
+            done();    
+        })
+        .end((err, res) => {
+            if(err){
+                return done(err);
+            }
+        });
+    });
+    
+    it('Should return 404 if todo not found', (done) => {
+        let hexId = new ObjectID().toHexString();
+
+        request(app)
+        .patch(`/todos/${hexId}`)
+        .expect(404)
+        .end(done);
+    });
+
+    it('Should return 404 if objectId is invalid', (done) => {
+        request(app)
+        .patch('/todosd/123sfd')
+        .expect(404)
+        .end(done);
+    });
 
 });
