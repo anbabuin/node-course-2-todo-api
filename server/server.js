@@ -58,6 +58,31 @@ app.delete('/todos/:id', (req, res) => {
 
 });
 
+// challenge
+// POST /users, pick email & password
+app.post('/users', (req, res) => {
+    let data = _.pick(req.body, ['email', 'password']);
+    // already has the object
+    // let newUser = new User({
+    //     email: data.email,
+    //     password: data.password,
+    //     tokens: []
+    // });
+    let user = new User(data);
+
+    // model methods(User.findByToken) and instance methods(newUser.generateAuthToken)
+
+    // arrow function inside "then" had the argument "user", same object declared above
+    // can be omitted to clarify code
+    user.save().then(() =>{  
+        return user.generateAuthToken();
+    }).then((token) => {
+        // adding token as header in response, x-auth is a custom header
+        res.header('x-auth', token).send(user);
+    }).catch((e) => {
+            res.status(400).send(e);
+    });
+});
 
 app.listen(port, () => {
     console.log(`Started on port ${port}`);
